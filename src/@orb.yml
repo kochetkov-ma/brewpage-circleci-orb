@@ -1,0 +1,9 @@
+version: 2.1
+
+description: >
+  Publish a test report, HTML or Markdown page, file or static site from a CircleCI job to BrewPage
+  (https://brewpage.app) and get a shareable link. Free, fast, no sign-up or API key needed.
+
+display:
+  home_url: https://brewpage.app
+  source_url: https://github.com/kochetkov-ma/brewpage-circleci-orb

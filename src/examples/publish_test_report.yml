@@ -1,0 +1,22 @@
+description: >
+  Publish an HTML test report after the tests run, even when they fail, and use the link in a later step.
+
+usage:
+  version: 2.1
+  orbs:
+    brewpage: brewpage/publish@1.0.0
+  jobs:
+    test:
+      docker:
+        - image: cimg/node:24.22.2-browsers
+      steps:
+        - checkout
+        - run: npm ci && npx playwright test
+        - brewpage/publish:
+            path: playwright-report
+            ttl: "7"
+        - run: echo "Report at $BREWPAGE_LINK"
+  workflows:
+    main:
+      jobs:
+        - test

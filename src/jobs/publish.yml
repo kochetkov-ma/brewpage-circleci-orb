@@ -1,0 +1,61 @@
+description: >
+  Attach the workspace and publish a path from it to BrewPage. Persist the report or site to the
+  workspace in an earlier job.
+
+executor: default
+
+parameters:
+  workspace_root:
+    type: string
+    default: "."
+    description: Where to attach the workspace; path is read relative to the working directory.
+  path:
+    type: string
+    description: File, directory (static site) or .zip (with kind site) to publish.
+  kind:
+    type: enum
+    enum: [auto, file, site]
+    default: auto
+    description: auto (directory = site, else file), file or site.
+  namespace:
+    type: string
+    default: ""
+    description: Empty (default) = private, unlisted, link-only. "public" = listed in the gallery and sitemap.
+  ttl:
+    type: string
+    default: ""
+    description: Days the publication stays; empty = server default.
+  tags:
+    type: string
+    default: ""
+    description: Comma-separated tags.
+  entry:
+    type: string
+    default: ""
+    description: Site entry file (default index.html).
+  owner_token:
+    type: env_var_name
+    default: BREWPAGE_OWNER_TOKEN
+    description: Name of the env var holding your owner token (optional).
+  password:
+    type: env_var_name
+    default: BREWPAGE_PASSWORD
+    description: Name of the env var holding an access password (optional).
+  show_manage_url:
+    type: boolean
+    default: true
+    description: Print the private manage link (edit/delete) in the log; turn off for public projects.
+
+steps:
+  - attach_workspace:
+      at: << parameters.workspace_root >>
+  - publish:
+      path: << parameters.path >>
+      kind: << parameters.kind >>
+      namespace: << parameters.namespace >>
+      ttl: << parameters.ttl >>
+      tags: << parameters.tags >>
+      entry: << parameters.entry >>
+      owner_token: << parameters.owner_token >>
+      password: << parameters.password >>
+      show_manage_url: << parameters.show_manage_url >>

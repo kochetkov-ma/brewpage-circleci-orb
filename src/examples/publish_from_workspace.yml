@@ -1,0 +1,25 @@
+description: >
+  Build docs in one job, then publish the folder as a public static site with the orb's job.
+
+usage:
+  version: 2.1
+  orbs:
+    brewpage: brewpage/publish@1.0.0
+  jobs:
+    build-docs:
+      docker:
+        - image: cimg/base:2026.11
+      steps:
+        - checkout
+        - run: mkdir -p site && cp README.md site/index.md
+        - persist_to_workspace:
+            root: .
+            paths: [site]
+  workflows:
+    docs:
+      jobs:
+        - build-docs
+        - brewpage/publish:
+            requires: [build-docs]
+            path: site
+            namespace: public

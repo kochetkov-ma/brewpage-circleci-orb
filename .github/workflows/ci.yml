@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Shellcheck
+        run: docker run --rm -v "$PWD:/mnt:ro" koalaman/shellcheck:v0.11.0 src/scripts/publish.sh
+      - name: Pack orb
+        run: docker run --rm -v "$PWD:/orb" -w /orb circleci/circleci-cli:1.15.0 circleci orb pack src > orb.yml
+      - name: Validate orb
+        # Same GraphQL check as `circleci orb validate`, which needs no token this way.
+        run: |
+          jq -n --rawfile c orb.yml '{query: "query V($c: String!) { orbConfig(orbYaml: $c) { valid errors { message } } }", variables: {c: $c}}' > query.json
+          curl -fsS -X POST https://circleci.com/graphql-unstable -H 'Content-Type: application/json' --data-binary @query.json > result.json
+          cat result.json
+          jq -e '.data.orbConfig.valid == true' result.json

@@ -1,0 +1,79 @@
+description: >
+  Publish a file, page or static site to BrewPage and print the link. Later steps of the job
+  read BREWPAGE_LINK, BREWPAGE_ID, BREWPAGE_NAMESPACE and BREWPAGE_EXPIRES_AT.
+
+parameters:
+  path:
+    type: string
+    description: File, directory (static site) or .zip (with kind site) to publish.
+  kind:
+    type: enum
+    enum: [auto, file, site]
+    default: auto
+    description: auto (directory = site, else file), file or site.
+  namespace:
+    type: string
+    default: ""
+    description: >
+      Empty (default) = private, unlisted, link-only. "public" = listed in the BrewPage gallery and
+      sitemap; anyone can find it, never publish secrets there.
+  ttl:
+    type: string
+    default: ""
+    description: Days the publication stays; empty = server default.
+  tags:
+    type: string
+    default: ""
+    description: Comma-separated tags.
+  entry:
+    type: string
+    default: ""
+    description: Site entry file (default index.html).
+  owner_token:
+    type: env_var_name
+    default: BREWPAGE_OWNER_TOKEN
+    description: Name of the env var holding your owner token (optional; groups publications under one owner).
+  password:
+    type: env_var_name
+    default: BREWPAGE_PASSWORD
+    description: Name of the env var holding an access password (optional).
+  show_manage_url:
+    type: boolean
+    default: true
+    description: Print the private manage link (edit/delete) in the log; turn off for public projects.
+  api_url:
+    type: string
+    default: https://brewpage.app
+    description: BrewPage base URL.
+  when:
+    type: enum
+    enum: [always, on_success, on_fail]
+    default: always
+    description: When to publish; always also publishes reports of failed runs.
+
+steps:
+  - run:
+      name: Publish to BrewPage
+      when: << parameters.when >>
+      environment:
+        BREWPAGE_PATH: << parameters.path >>
+        BREWPAGE_KIND: << parameters.kind >>
+        BREWPAGE_NAMESPACE: << parameters.namespace >>
+        BREWPAGE_TTL: << parameters.ttl >>
+        BREWPAGE_TAGS: << parameters.tags >>
+        BREWPAGE_ENTRY: << parameters.entry >>
+        BREWPAGE_OWNER_TOKEN_VAR: << parameters.owner_token >>
+        BREWPAGE_PASSWORD_VAR: << parameters.password >>
+        BREWPAGE_SHOW_MANAGE_URL: << parameters.show_manage_url >>
+        BREWPAGE_API_URL: << parameters.api_url >>
+        BREWPAGE_CLIENT: brewpage-circleci-orb/1.0.0
+        BREWPAGE_OUTPUT_FILE: /tmp/brewpage-output.env
+      command: <<include(scripts/publish.sh)>>
+  - run:
+      name: Export BrewPage link to later steps
+      when: << parameters.when >>
+      command: |
+        if [ -f /tmp/brewpage-output.env ]; then
+          cat /tmp/brewpage-output.env >> "$BASH_ENV"
+          rm -f /tmp/brewpage-output.env
+        fi

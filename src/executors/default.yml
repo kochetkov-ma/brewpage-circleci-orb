@@ -1,0 +1,10 @@
+description: CircleCI base image with curl and jq.
+
+parameters:
+  tag:
+    type: string
+    default: "2026.11"
+    description: Exact cimg/base tag.
+
+docker:
+  - image: cimg/base:<< parameters.tag >>
